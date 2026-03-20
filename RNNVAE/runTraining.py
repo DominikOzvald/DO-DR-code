@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
-from datasets import LogDataSet, pad_collate_fn
+from datasets import LogDataSet
+from data_utils import pad_collate_fn
 from embeddings import create_embedding_matrix
-from RnnVae import RnnVae
+from rnn_vae import RnnVae
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 from TrainUtils import vae_train_loop

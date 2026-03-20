@@ -1,6 +1,6 @@
 from embeddings import create_embedding_matrix,CharVocab
-from datasets import extract_raw
-from CharVAE import CharVae
+from data_utils import extract_raw
+from char_vae import CharVae,LineVae
 import torch
 from os import path,listdir
 import matplotlib.pyplot as plt
@@ -9,13 +9,13 @@ if __name__ == "__main__":
     save_folder = "../trained_models"
     image_folder = "../test_images"
     embedding_dim = 256
-    hidden_size = 400
-    latent_size = 128
-    model_name = f"CHAR_VAE_I_{embedding_dim}_H_{hidden_size}_L_{latent_size}"
+    hidden_size = 600
+    latent_size = 512
+    model_name = f"LINE_VAE_I_{embedding_dim}_H_{hidden_size}_L_{latent_size}"
     char_vocab = CharVocab()
     matrix = create_embedding_matrix(char_vocab,embedding_dim)
 
-    model = CharVae(matrix,embedding_size=embedding_dim,latent_size=latent_size,hidden_size=hidden_size)
+    model = LineVae(matrix,embedding_size=embedding_dim,latent_size=latent_size,hidden_size=hidden_size)
     model.load_state_dict(torch.load(path.join(save_folder, model_name + ".pt"), weights_only=True))
     model.eval()
 
@@ -27,13 +27,13 @@ if __name__ == "__main__":
         with torch.no_grad():
             accuracies = []
             for log in data:
-                instance = char_vocab.encode(log).unsqueeze(dim=1)
+                instance = char_vocab.encode(log).unsqueeze(dim=0)
                 length = torch.tensor(len(log)).unsqueeze(dim=0).cpu()
                 logist,mean,log_var = model(instance,length)
                 rec = torch.argmax(torch.softmax(logist,dim=2),dim=2)
                 acc = torch.sum(rec == instance)/(rec.shape[0]*rec.shape[1])
                 accuracies.append(acc.item())
-            print(f"Average accuracy: {sum(accuracies)/len(data):.2f}")
+            print(f"Average accuracy: {sum(accuracies)/len(data):.4f}")
             plt.plot(range(len(accuracies)), accuracies)
             plt.title(f"{log_file}")
             plt.ylim((0, 1.1))

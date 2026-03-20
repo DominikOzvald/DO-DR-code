@@ -1,11 +1,9 @@
-from torch.utils.data import Dataset, DataLoader
-import torch
+from torch.utils.data import Dataset
 from Drain import LogParser
+from data_utils import extract_with_parse, extract_raw, form_instances, count_logs, pad_frame_collate_fn
 from embeddings import LogVocab, CharVocab
 import os
-import pandas
 
-TEMP_FILE_NAME = "tmp_log.txt"
 PARSE_IN_DIR = "./"
 PARSE_OUT_DIR = "./"
 
@@ -26,87 +24,10 @@ DEFAULT_DICT = {
 }
 
 
-def extract_with_parse(file_name, parser: LogParser):
-    try:
-        log_file = open(file_name, "r", encoding="utf-8")
-        tmp_file = open(TEMP_FILE_NAME, "w", encoding="utf-8")
-
-        for line in log_file:
-            tmp_file.write(line)
-
-        log_file.close()
-        tmp_file.close()
-
-        parser.parse(TEMP_FILE_NAME)
-        freq_df = pandas.read_csv(TEMP_FILE_NAME + "_templates.csv")
-        freq_dict = dict(zip(freq_df["EventTemplate"], freq_df["Occurrences"]))
-        log_df = pandas.read_csv(TEMP_FILE_NAME + "_structured.csv")
-        log_list = list(log_df["EventTemplate"])
-
-        os.remove(TEMP_FILE_NAME)
-        os.remove(TEMP_FILE_NAME + "_templates.csv")
-        os.remove(TEMP_FILE_NAME + "_structured.csv")
-
-        return freq_dict, log_list
-
-
-    except:
-        print('skipping file', file_name)
-        return {}, []
-
-
-def extract_raw(file_name):
-    logs = []
-    try:
-        with open(file_name, "r", encoding="utf-8") as f:
-            for line in f:
-                log = line.split(" ", 1)[1]
-                logs.append(log)
-
-    except:
-        print("Skipping file:", file_name)
-    return logs
-
-
-def form_instances(logs, step: int, frame_size: int):
-    instances = []
-    for i in range(0, len(logs), step):
-        instances.append(logs[i:i + frame_size])
-    return instances
-
-
 def set_kwargs(arg_dict):
     for k in DEFAULT_DICT:
         if k not in arg_dict:
             arg_dict[k] = DEFAULT_DICT[k]
-
-
-def count_logs(total_frequencies, frequencies):
-    for k in frequencies:
-        if k in total_frequencies:
-            total_frequencies[k] += frequencies[k]
-        else:
-            total_frequencies[k] = frequencies[k]
-
-
-def pad_collate_fn(batch):
-    return torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0).to(torch.long)
-
-def pad_len_collate_fn(batch):
-    lengths = torch.tensor([len(x) for x in batch])
-    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0).to(torch.long)
-    return batch,lengths
-def fixed_pad_fn(batch, size=30):
-    with torch.no_grad():
-        for i in range(len(batch)):
-            if (batch[i].shape[-1] < size):
-                batch[i] = torch.cat((batch[i], torch.zeros(size - batch[i].shape[-1], )), dim=-1)
-            batch[i] = batch[i].unsqueeze(dim=0)
-        return torch.cat(batch, dim=0).to(torch.long)
-
-
-def fixed_pad_fn_factory(size=10):
-    return lambda x: fixed_pad_fn(x, size)
 
 
 class LogDataSet(Dataset):
@@ -143,34 +64,49 @@ class LogDataSet(Dataset):
 
 class LogCharDataSet(Dataset):
 
-    def __init__(self, log_dir: str, step=1, frame_size=1):
+    def __init__(self, log_dir: str, step=1, frame_size=1, cut_off=200, join_frame=True):
         super().__init__()
         self.data = []
         self.vocab = CharVocab()
+        self.join_frame = join_frame
         log_files = [file for file in os.listdir(log_dir) if file[-4:] == ".txt"]
         for log_file in log_files:
             logs = extract_raw(os.path.join(log_dir, log_file))
             for i in range(0, len(logs), step):
                 frame = logs[i:i + frame_size]
+                frame = [log[:cut_off] for log in frame]
+                if self.join_frame:
+                    instance = "".join(frame)
+                    if len(instance) > 1 and instance not in self.data:
+                        self.data.append(instance)
+                else:
+                    self.data.append(frame)
 
-                instance = "".join(frame)
-                if len(instance) > 1:
-                    self.data.append(instance[:200])
+    def _encode_frame(self,frame: str | list):
+        if type(frame) is str:
+            return self.vocab.encode(frame)
+        else:
+            return [self.vocab.encode(line) for line in frame]
 
-    def __getitem__(self, item):
-        log = self.data[item]
-        return self.vocab.encode(log)
+    def __getitem__(self, item: int | slice):
+        logs = self.data[item]
+        if type(item) is int:
+            return self._encode_frame(logs)
+        else:
+            return [self._encode_frame(frame) for frame in logs]
 
     def __len__(self):
         return len(self.data)
 
 
 if __name__ == "__main__":
-    step_size = 1
-    frame_size = 1
-    data_set = LogCharDataSet("../test_data", frame_size=frame_size, step=step_size)
-    x = data_set[0]
-    print(data_set[0].shape, data_set[1].shape, data_set[2].shape)
+    step_size = 15
+    frame_size = 15
+    data_set = LogCharDataSet("../test_data", frame_size=frame_size, step=step_size,join_frame=False)
+
+    x = [data_set[0],data_set[1][:10]]
+    x,lens = pad_frame_collate_fn(x)
+    print(x.shape)
 #     re = [r"^[\.s]+$"]
 #     data_set = LogDataSet("../test_data", minFreq=2, step=step_size, frame_size=frame_size, rex=re)
 #     loader = DataLoader(dataset=data_set, shuffle=False, batch_size=2, collate_fn=fixed_pad_fn_factory(frame_size))

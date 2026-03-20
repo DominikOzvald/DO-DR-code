@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as f
 import tqdm
 
 
@@ -46,9 +45,8 @@ def vae_train_loop_lengths(model, dataloader, optimizer, epochs=100, show_every_
             data = data.to(device)
             lengths = lengths.cpu()
             optimizer.zero_grad()
-            data = torch.transpose(data, dim0=0, dim1=1)
             rec, mean, log_var = model(data, lengths)
-            kl_loss = -0.5 * torch.sum(1 + log_var - mean ** 2 - torch.exp(log_var)) / data.size(0)
+            kl_loss = -0.5 * torch.sum(1 + log_var - mean ** 2 - torch.exp(log_var)) / data.size(1)
             loss = criterion(rec.reshape(-1, rec.shape[-1]), data.reshape(-1)) + beta * kl_loss
             loss.backward()
             train_loss += loss.item()

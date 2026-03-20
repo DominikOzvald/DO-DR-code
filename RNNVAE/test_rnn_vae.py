@@ -2,8 +2,8 @@ import pickle
 import torch
 from os import path, listdir
 from embeddings import LogVocab, create_embedding_matrix
-from RnnVae import RnnVae
-from datasets import extract_with_parse, form_instances
+from rnn_vae import RnnVae
+from data_utils import extract_with_parse, form_instances
 from Drain import LogParser
 import matplotlib.pyplot as plt
 

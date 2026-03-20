@@ -1,8 +1,9 @@
-from datasets import LogCharDataSet,pad_len_collate_fn
+from datasets import LogCharDataSet
+from data_utils import pad_len_collate_fn
 from embeddings import create_embedding_matrix
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
-from CharVAE import CharVae
+from char_vae import CharVae,LineVae
 from torch.optim import Adam
 from TrainUtils import vae_train_loop_lengths
 from os import path
@@ -13,13 +14,13 @@ if __name__ == "__main__":
     save_folder = "../trained_models"
     image_folder = "../train_images"
     embedding_dim = 256
-    batch_size = 64
-    hidden_size = 400
-    latent_size = 128
-    lr = 1e-4
-    epochs = 200
-    print_every = 20
-    model_name = f"CHAR_VAE_I_{embedding_dim}_H_{hidden_size}_L_{latent_size}"
+    batch_size = 128
+    hidden_size = 600
+    latent_size = 512
+    lr = 1e-3
+    epochs = 400
+    print_every = 50
+    model_name = f"LINE_VAE_I_{embedding_dim}_H_{hidden_size}_L_{latent_size}"
     beta = 0.01
     # ----------------------------------------------------------------------------
 
@@ -34,7 +35,7 @@ if __name__ == "__main__":
 
     # ----------------------------------------------------------------------------
 
-    model = CharVae(matrix,embedding_size=embedding_dim,hidden_size=hidden_size,latent_size=latent_size)
+    model = LineVae(matrix,embedding_size=embedding_dim,hidden_size=hidden_size,latent_size=latent_size)
     optimizer = Adam(model.parameters(),lr=lr)
     loss = vae_train_loop_lengths(model,data_loader,optimizer,epochs=epochs,show_every_n=print_every,beta=beta)
     # ----------------------------------------------------------------------------
