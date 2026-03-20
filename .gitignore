@@ -5,7 +5,12 @@ test_images
 train_data
 train_images
 trained_models
-Drain.py
-Brain.py
 __pycache__
 testing
+Drain.py
+Brain.py
+shuffle.py
+srcript.py
+success_rates.txt
+test_brain.py
+test_drain.py
