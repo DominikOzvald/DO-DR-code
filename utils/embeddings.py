@@ -1,7 +1,5 @@
 import torch
 
-# from sentence_transformers import SentenceTransformer
-
 SPECIAL_SYMBOLS = ["<PAD>", "<UNK>", "<SOS>", "\n"]
 
 
@@ -95,23 +93,5 @@ class CharVocab:
         return len(self.str2int)
 
 
-def create_embedding_matrix(log_vocab: LogVocab | CharVocab, dim=384, use_transformer=False):
-    # if use_transformer:
-    #     with torch.no_grad():
-    #         transformer = SentenceTransformer("all-MiniLM-L6-v2")
-    #         keys = list(log_vocab.str2int.keys())
-    #         matrix = torch.tensor(transformer.encode(keys))
-    #         matrix[0] = torch.zeros(matrix.shape[1])
-    #         return torch.nn.Embedding.from_pretrained(matrix, freeze=True, padding_idx=0)
-    # else:
+def create_embedding_matrix(log_vocab: LogVocab | CharVocab, dim=384):
     return torch.nn.Embedding(len(log_vocab), dim, padding_idx=0)
-
-
-if __name__ == "__main__":
-    vocab = CharVocab()
-    print(vocab.str2int)
-#     vocab = LogVocab({"the": 2, "of": 1, "to": 3, "and": 4, "in": 5})
-#     print(vocab.int2str)
-#     enc = vocab.encode(['the', 'of', 'is','<PAD>'])
-#     print(vocab.decode(enc))
-#     print(create_embedding_matrix(vocab,6)(enc))

@@ -1,11 +1,11 @@
-from datasets import LogCharDataSet
-from data_utils import pad_len_collate_fn
-from embeddings import create_embedding_matrix
+from utils.datasets import LogCharDataSet
+from utils.data import pad_len_collate_fn
+from utils.embeddings import create_embedding_matrix
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
-from char_vae import CharVae,LineVae
+from models.vae import LineVae
 from torch.optim import Adam
-from TrainUtils import vae_train_loop_lengths
+from utils.train import vae_train_loop_lengths
 from os import path
 from torch import save
 

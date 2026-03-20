@@ -1,6 +1,6 @@
-from embeddings import create_embedding_matrix,CharVocab
-from data_utils import extract_raw
-from char_vae import CharVae,LineVae
+from utils.embeddings import create_embedding_matrix,CharVocab
+from utils.data import extract_raw
+from models.vae import LineVae
 import torch
 from os import path,listdir
 import matplotlib.pyplot as plt
