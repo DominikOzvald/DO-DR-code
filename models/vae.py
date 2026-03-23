@@ -51,6 +51,7 @@ class CharVae(torch.nn.Module):
 class LineVaeEnc(torch.nn.Module):
     def __init__(self, input_size: int, hidden_size: int, latent_size: int):
         super().__init__()
+        self.latent_size = latent_size
         self.rnn = torch.nn.LSTM(input_size=input_size, hidden_size=hidden_size, batch_first=True)
         self.fc_mean = torch.nn.Linear(in_features=hidden_size, out_features=latent_size)
         self.fc_log_var = torch.nn.Linear(in_features=hidden_size, out_features=latent_size)
