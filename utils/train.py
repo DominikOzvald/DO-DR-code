@@ -1,5 +1,6 @@
 import torch
 import tqdm
+import torch.nn.functional as F
 
 
 def vae_loss(x, recon, mean, log_var, beta, criterion):
@@ -53,5 +54,46 @@ def vae_train_loop_lengths(model, dataloader, optimizer, epochs=100, show_every_
             optimizer.step()
         if epoch % show_every_n == 0 or epoch == epochs - 1:
             print(f"Epoch {epoch}: Average Loss: {train_loss / batch_num}")
+        losses.append(train_loss / batch_num)
+    return losses
+
+
+def transformer_loss(out, z, masks):
+    loss = F.mse_loss(out, z, reduction='none')
+    inverse_masks = (torch.ones_like(masks).to(masks.device) - masks).float().unsqueeze(-1)
+    loss = (loss * inverse_masks).sum() / inverse_masks.sum()
+    return loss
+
+
+def transformer_train_loop(model, embedder, optimizer, data_loader, epochs, show_every_n):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
+    model.train()
+    embedder.requires_grad_(False)
+    embedder.to(device)
+    embedder.train()
+    # model.embedder.requires_grad_(False)
+    losses = []
+    batch_num = len(data_loader.dataset) // data_loader.batch_size + 1
+    for epoch in tqdm.tqdm(range(epochs)):
+        train_loss = 0
+        for batch, (data, lengths, masks) in enumerate(data_loader):
+            data = data.to(device)
+            masks = masks.to(device)
+            lengths = lengths.cpu()
+            z = embedder(data, lengths)
+            sos = torch.zeros(z.size(0), 1, z.size(2)).to(device)
+            z_tgt = torch.cat([sos, z[:, :-1, :]], dim=1)
+            optimizer.zero_grad()
+            out = model(z, z_tgt, masks)
+            loss = transformer_loss(out, z, masks)
+            loss.backward()
+            train_loss += loss.item()
+            optimizer.step()
+        if epoch % show_every_n == 0 or epoch == epochs - 1:
+            print(f"Epoch {epoch}: Average Loss: {train_loss / batch_num}")
+            # print("z", z[0, 0, :5])
+            # print("o", out[0, 0, :5])
+            # print("o", out[0, 1, :5])
         losses.append(train_loss / batch_num)
     return losses

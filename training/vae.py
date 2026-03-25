@@ -3,7 +3,7 @@ from utils.data import pad_len_collate_fn
 from utils.embeddings import create_embedding_matrix
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
-from models.vae import LineVae
+from models.vae import CharVae,LineVae
 from torch.optim import Adam
 from utils.train import vae_train_loop_lengths
 from os import path
@@ -13,15 +13,15 @@ if __name__ == "__main__":
     data_folder = "../train_data"
     save_folder = "../trained_models"
     image_folder = "../train_images"
-    embedding_dim = 256
+    embedding_dim = 32
     batch_size = 128
-    hidden_size = 600
-    latent_size = 512
-    lr = 1e-3
-    epochs = 400
-    print_every = 50
+    hidden_size = 48
+    latent_size = 64
+    lr = 5e-3
+    epochs = 1000
+    print_every = 100
     model_name = f"LINE_VAE_I_{embedding_dim}_H_{hidden_size}_L_{latent_size}"
-    beta = 0.01
+    beta = 0.000
     # ----------------------------------------------------------------------------
 
     data_set = LogCharDataSet(data_folder)
@@ -36,9 +36,11 @@ if __name__ == "__main__":
     # ----------------------------------------------------------------------------
 
     model = LineVae(matrix,embedding_size=embedding_dim,hidden_size=hidden_size,latent_size=latent_size)
+    print(model.enc_matrix.weight[40:45, 40:45])
     optimizer = Adam(model.parameters(),lr=lr)
     loss = vae_train_loop_lengths(model,data_loader,optimizer,epochs=epochs,show_every_n=print_every,beta=beta)
     # ----------------------------------------------------------------------------
+    print(model.enc_matrix.weight[40:45, 40:45])
     axs[1].imshow(matrix.weight.clone().detach().cpu().numpy()[:50,:50])
     axs[1].set_title("Embedding matrix after training")
 

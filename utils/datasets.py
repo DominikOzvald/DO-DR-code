@@ -61,16 +61,17 @@ class TransformerDataset(Dataset):
     def __getitem__(self, item):
         frame_stat, frame_end = self._frame_ends(item)
         logs = self.data[frame_stat:frame_end]
-        enc_logs = [self.vocab.encode(log) for log in logs]
-        lengths = torch.Tensor([len(log) for log in enc_logs])
-        frame = torch.stack([F.pad(log, (0, self.max_len - log.size(0)), value=0) for log in enc_logs]).to(torch.long)
-        frame_len = frame.size(0)
-        if frame_len < self.frame_size:
-            frame = F.pad(frame, (0, 0, 0, self.frame_size - frame_len), value=0)
-            lengths = torch.cat([lengths, torch.ones(self.frame_size - frame_len)])
-            mask = torch.cat([torch.zeros(frame_len), torch.ones(self.frame_size - frame_len)])
-        else:
-            mask = torch.zeros(frame_len)
+        with torch.no_grad():
+            enc_logs = [self.vocab.encode(log) for log in logs]
+            lengths = torch.Tensor([len(log) for log in enc_logs])
+            frame = torch.stack([F.pad(log, (0, self.max_len - log.size(0)), value=0) for log in enc_logs]).to(torch.long)
+            frame_len = frame.size(0)
+            if frame_len < self.frame_size:
+                frame = F.pad(frame, (0, 0, 0, self.frame_size - frame_len), value=0)
+                lengths = torch.cat([lengths, torch.ones(self.frame_size - frame_len)])
+                mask = torch.cat([torch.zeros(frame_len), torch.ones(self.frame_size - frame_len)])
+            else:
+                mask = torch.zeros(frame_len)
         return frame, lengths, mask
 
     def __len__(self):

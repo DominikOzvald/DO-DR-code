@@ -1,21 +1,22 @@
 import torch
+import math
 
 
 class CharVaeEnc(torch.nn.Module):
     def __init__(self, input_size: int, hidden_size: int, latent_size: int):
         super().__init__()
         self.latent_size = latent_size
-        self.rnn = torch.nn.LSTM(input_size=input_size, hidden_size=hidden_size)
+        self.rnn = torch.nn.LSTM(input_size=input_size, hidden_size=hidden_size, batch_first=True)
         self.fc_mean = torch.nn.Linear(in_features=hidden_size, out_features=latent_size)
         self.fc_log_var = torch.nn.Linear(in_features=hidden_size, out_features=latent_size)
 
     def forward(self, x, lengths):
-        rnn_in = torch.nn.utils.rnn.pack_padded_sequence(x, lengths, enforce_sorted=False)
+        rnn_in = torch.nn.utils.rnn.pack_padded_sequence(x, lengths, enforce_sorted=False, batch_first=True)
         output, _ = self.rnn(rnn_in)
-        output, _ = torch.nn.utils.rnn.pad_packed_sequence(output)
+        output, _ = torch.nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
         mean = self.fc_mean(output)
         log_var = self.fc_log_var(output)
-        eps = torch.rand_like(mean).to(self.fc_mean.weight.device)
+        eps = 0.0 * torch.rand_like(mean).to(self.fc_mean.weight.device)
         z = mean + torch.exp(0.5 * log_var) * eps
         return z, mean[:lengths.min()], log_var[:lengths.min()]
 
@@ -23,13 +24,13 @@ class CharVaeEnc(torch.nn.Module):
 class CharVaeDec(torch.nn.Module):
     def __init__(self, latent_size: int, hidden_size: int, vocab_size: int):
         super().__init__()
-        self.rnn = torch.nn.LSTM(input_size=latent_size, hidden_size=hidden_size)
+        self.rnn = torch.nn.LSTM(input_size=latent_size, hidden_size=hidden_size, batch_first=True)
         self.fc = torch.nn.Linear(in_features=hidden_size, out_features=vocab_size)
 
     def forward(self, z, lengths):
-        rnn_in = torch.nn.utils.rnn.pack_padded_sequence(z, lengths, enforce_sorted=False)
+        rnn_in = torch.nn.utils.rnn.pack_padded_sequence(z, lengths, enforce_sorted=False, batch_first=True)
         output, _ = self.rnn(rnn_in)
-        h, _ = torch.nn.utils.rnn.pad_packed_sequence(output)
+        h, _ = torch.nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
         logist = self.fc(h)
         return logist
 
@@ -47,6 +48,11 @@ class CharVae(torch.nn.Module):
         logist = self.dec(z, lengths)
         return logist, mean, log_var
 
+    def get_z(self, in_text, lengths):
+        x = self.matrix(in_text)
+        z, mean, log_var = self.enc(x, lengths)
+        return z
+
 
 class LineVaeEnc(torch.nn.Module):
     def __init__(self, input_size: int, hidden_size: int, latent_size: int):
@@ -61,7 +67,7 @@ class LineVaeEnc(torch.nn.Module):
         output, (hn, cn) = self.rnn(rnn_in)
         mean = self.fc_mean(hn)
         log_var = self.fc_log_var(hn)
-        eps = torch.rand_like(mean).to(self.fc_mean.weight.device)
+        eps = 0.01 * torch.rand_like(mean).to(self.fc_mean.weight.device)
         z = mean + torch.exp(0.5 * log_var) * eps
         return z.squeeze(0).unsqueeze(1), mean, log_var
 
@@ -93,12 +99,18 @@ class LineVae(torch.nn.Module):
         self.dec = LineVaeDec(latent_size, hidden_size, self.enc_matrix.weight.size(0))
 
     def forward(self, in_text, lengths):
-        x = self.enc_matrix(in_text)
+        x = self.enc_matrix(in_text) * math.sqrt(self.enc_matrix.embedding_dim)
         z, mean, log_var = self.enc(x, lengths)
         sos = 2 * torch.ones((in_text.size(0), 1), dtype=torch.long).to(self.enc_matrix.weight.device)
-        targets = self.dec_matrix(torch.cat([sos, in_text], dim=-1)[:, :-1])
+        targets = self.dec_matrix(torch.cat([sos, in_text], dim=-1)[:, :-1])* math.sqrt(
+            self.enc_matrix.embedding_dim)
         recon = self.dec(z, lengths, targets)
         return recon, mean, log_var
+
+    def get_z(self, in_text, lengths):
+        x = self.enc_matrix(in_text)
+        z, mean, log_var = self.enc(x, lengths)
+        return z
 
 
 class RnnVaeEnc(torch.nn.Module):
