@@ -42,11 +42,12 @@ def extract_raw(file_name):
     try:
         with open(file_name, "r", encoding="utf-8") as f:
             for line in f:
-                log = line.split(" ", 1)[1]
-                logs.append(log)
+                log = line.split(" ", 1)
+                if len(log) > 1:
+                    logs.append(log[1])
 
-    except:
-        print("Skipping file:", file_name)
+    except Exception as e:
+        print("Skipping file:", file_name, e)
     return logs
 
 
@@ -77,8 +78,8 @@ def pad_len_collate_fn(batch):
 
 def pad_frame_collate_fn(batch):
     frame_lengths = torch.tensor([len(frame) for frame in batch])
-    padded_subframes,subframe_lengths = zip(*[pad_len_collate_fn(frame) for frame in batch])
-    return padded_subframes,frame_lengths
+    padded_subframes, subframe_lengths = zip(*[pad_len_collate_fn(frame) for frame in batch])
+    return padded_subframes, frame_lengths
 
 
 def fixed_pad_fn(batch, size=30):

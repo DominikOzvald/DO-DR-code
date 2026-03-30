@@ -13,15 +13,15 @@ if __name__ == "__main__":
     data_folder = "../train_data"
     save_folder = "../trained_models"
     image_folder = "../train_images"
-    embedding_dim = 32
     batch_size = 128
-    hidden_size = 48
+    embedding_dim = 32
+    hidden_size = 196
     latent_size = 64
-    lr = 5e-3
-    epochs = 1000
-    print_every = 100
+    lr = 1e-3
+    epochs = 100
+    print_every = 10
     model_name = f"LINE_VAE_I_{embedding_dim}_H_{hidden_size}_L_{latent_size}"
-    beta = 0.000
+    beta = 0.001
     # ----------------------------------------------------------------------------
 
     data_set = LogCharDataSet(data_folder)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     plt.savefig(path.join(image_folder, model_name + '_embedding.png'))
     plt.clf()
 
-    plt.plot(range(50, len(loss)), loss[50:], )
+    plt.plot(range(2, len(loss)), loss[2:], )
     plt.title(model_name + " loss")
     plt.savefig(path.join(image_folder, model_name + "_loss.png"))
 

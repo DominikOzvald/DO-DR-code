@@ -18,7 +18,7 @@ if __name__ == "__main__":
     # ----------------------------------------------------------------------------
 
     vae_embedding_dim = 32
-    vae_hidden_size = 48
+    vae_hidden_size = 196
     vae_latent_size = 64
     # ----------------------------------------------------------------------------
 
@@ -39,11 +39,12 @@ if __name__ == "__main__":
     enc_layer = 2
     n_head = 2
     dim_forward = 1024
+    d_model = 96
     transformer_name = f"VAETransformer_DE_{dec_layer}_H_{n_head}_F_{dim_forward}"
     lr = 1e-3
     # ----------------------------------------------------------------------------
     embedder = Embedder(vae.enc_matrix,vae.enc)
-    model = VAETransformer(z_dim=vae.enc.latent_size,d_model=128, n_head=n_head, dec_layer=dec_layer, enc_layer=enc_layer,
+    model = VAETransformer(z_dim=vae.enc.latent_size,d_model=d_model, n_head=n_head, dec_layer=dec_layer, enc_layer=enc_layer,
                            dim_forward=dim_forward)
 
     optimizer = Adam(model.parameters(), lr=lr)
@@ -53,8 +54,8 @@ if __name__ == "__main__":
     frame_size = 30
     max_len = 200
     batch_size = 64
-    epochs = 1000
-    out_every = 100
+    epochs = 120
+    out_every = 10
     data_set = TransformerDataset(data_folder, step=step, frame_size=frame_size)
     data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False)
     # ----------------------------------------------------------------------------

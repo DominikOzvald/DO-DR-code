@@ -10,9 +10,9 @@ if __name__ == "__main__":
     data_folder = "../test_data"
     save_folder = "../trained_models"
     image_folder = "../test_images"
-    embedding_dim = 128
-    hidden_size = 256
-    latent_size = 512
+    embedding_dim = 32
+    hidden_size = 196
+    latent_size = 64
     model_name = f"LINE_VAE_I_{embedding_dim}_H_{hidden_size}_L_{latent_size}"
     char_vocab = CharVocab()
     matrix = create_embedding_matrix(char_vocab, embedding_dim)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
                 rec = torch.argmax(torch.softmax(logist, dim=2), dim=2)
                 acc = torch.sum(rec == instance) / (rec.shape[0] * rec.shape[1])
                 accuracies.append(acc.item())
-                print(F.mse_loss(model.get_z(instance, length), model.get_z(instance, length)))
+                #print(F.mse_loss(model.get_z(instance, length), model.get_z(instance, length)))
             print(f"Average accuracy: {sum(accuracies) / len(data):.4f}")
             plt.plot(range(len(accuracies)), accuracies)
             plt.title(f"{log_file}")
