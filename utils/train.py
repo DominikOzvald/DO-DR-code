@@ -1,5 +1,5 @@
 import math
-
+import copy
 import torch
 import tqdm
 import torch.nn.functional as F
@@ -78,6 +78,8 @@ def transformer_train_loop(model, embedder, optimizer, data_loader, epochs, show
     # model.embedder.requires_grad_(False)
     losses = []
     batch_num = len(data_loader.dataset) // data_loader.batch_size + 1
+    min_loss = 100.0
+    best_model = copy.deepcopy(model)
     for epoch in tqdm.tqdm(range(epochs)):
         train_loss = 0
         for batch, (data, lengths, masks) in enumerate(data_loader):
@@ -98,8 +100,12 @@ def transformer_train_loop(model, embedder, optimizer, data_loader, epochs, show
             # print("z", z[0, 0, :5])
             # print("o", out[0, 0, :5])
             # print("o", out[0, 1, :5])
+        if loss.item() < min_loss:
+            min_loss = loss.item()
+            best_model = copy.deepcopy(model)
         losses.append(train_loss / batch_num)
-    return losses
+    print(f"Min loss: {min_loss}")
+    return losses, model
 
 
 def dec_trans_train_loop(model, embedder, optimizer, data_loader, epochs, show_every_n, n_steps: int = 1):
@@ -129,3 +135,42 @@ def dec_trans_train_loop(model, embedder, optimizer, data_loader, epochs, show_e
             print(f"Epoch {epoch}: Average Loss: {train_loss / batch_num}")
         losses.append(train_loss / batch_num)
     return losses
+
+
+def conv_lstm_train_loop(model, optimizer, data_loader, epochs: int = 200, show_every_n: int = 10,
+                         milestones: list = [300, 500, 900]):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
+    model.train()
+    losses = []
+    batch_num = len(data_loader.dataset) // data_loader.batch_size + 1
+    criterion = torch.nn.CrossEntropyLoss(ignore_index=0)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones, gamma=0.7)
+    max_acc = 0
+    best_model = copy.deepcopy(model)
+    for epoch in tqdm.tqdm(range(epochs)):
+        train_loss = 0
+        for data, lengths in data_loader:
+            data = data.to(device)
+            lengths = lengths.cpu()
+            optimizer.zero_grad()
+            z = model(data, lengths)
+            loss = criterion(z.reshape(-1, z.size(-1)), data.reshape(-1))
+            loss.backward()
+            train_loss += loss.item()
+            optimizer.step()
+
+        with torch.no_grad():
+            predict = torch.argmax(torch.softmax(z, dim=-1), dim=-1)
+            acc = torch.sum(data == predict) / torch.sum(lengths)
+            if acc > max_acc:
+                max_acc = acc
+                best_model = copy.deepcopy(model)
+            if epoch % show_every_n == 0 or epoch == epochs - 1:
+                print(f"Accuracy:{acc:.5f}")
+
+        losses.append(train_loss / batch_num)
+        scheduler.step()
+
+    print(f"Max Accuracy:{max_acc:.5f}")
+    return losses, best_model

@@ -1,37 +1,43 @@
 import torch.nn
 from os import path
-from models.vae import LineVae
+from models.convlstm import ConvLSTM
 from utils.datasets import CharVocab, TransformerDataset
 from models.vaetransformer import VAETransformer
 from torch.optim import Adam
 from utils.train import transformer_train_loop
 from torch.utils.data import DataLoader
 from torch import save
-from models.embedder import Embedder
+from models.embedder import Embedder, ConvEmbedder
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
-    data_folder = "../train_data"
+    data_folder = "../train_data/"
     save_folder = "../trained_models"
     image_folder = "../train_images"
     # ----------------------------------------------------------------------------
-
-    vae_embedding_dim = 32
-    vae_hidden_size = 196
-    vae_latent_size = 64
+    char_vocab = CharVocab()
+    embed_size = 32
+    hidden_size_enc = 196
+    hidden_size_dec = 384
+    latent_size = 64
+    vocab_size = len(char_vocab)
+    use_embed_matrix = True
+    max_in_len = 200
+    letter_chunk = 4
     # ----------------------------------------------------------------------------
 
-    vae_name = f"LINE_VAE_I_{vae_embedding_dim}_H_{vae_hidden_size}_L_{vae_latent_size}"
-    char_vocab = CharVocab()
-    vae = LineVae(torch.nn.Embedding(len(char_vocab), embedding_dim=vae_embedding_dim, padding_idx=0),
-                  embedding_size=vae_embedding_dim, latent_size=vae_latent_size, hidden_size=vae_hidden_size)
+    lstm_conv_name = f"ConvLSTM_E_{embed_size}_H_{hidden_size_enc}_L_{latent_size}"
+    embedder = ConvEmbedder(embed_size=embed_size, hidden_size_enc=hidden_size_enc, hidden_size_dec=hidden_size_dec,
+                            latent_size=latent_size, letter_chunk=letter_chunk,
+                            max_in_len=max_in_len, use_embed_matrix=use_embed_matrix, vocab_size=vocab_size)
     # ----------------------------------------------------------------------------
 
     try:
-        vae.load_state_dict(torch.load(path.join(save_folder, vae_name) + ".pt", weights_only=True))
+        embedder.conv_lstm.load_state_dict(
+            torch.load(path.join(save_folder, lstm_conv_name) + ".pt", weights_only=True))
     except:
-        print("Can not load VAE", vae_name)
+        print("Can not load VAE", lstm_conv_name)
         exit(-1)
     # ----------------------------------------------------------------------------
 
@@ -43,28 +49,28 @@ if __name__ == "__main__":
     transformer_name = f"VAETransformer_DE_{dec_layer}_H_{n_head}_F_{dim_forward}"
     lr = 2e-3
     # ----------------------------------------------------------------------------
-    embedder = Embedder(vae.enc_matrix,vae.enc)
+
     model = VAETransformer(d_model=d_model, n_head=n_head, dec_layer=dec_layer, enc_layer=enc_layer,
                            dim_forward=dim_forward)
 
     optimizer = Adam(model.parameters(), lr=lr)
     # ----------------------------------------------------------------------------
 
-    step = 5
+    step = 1
     frame_size = 30
     max_len = 200
     batch_size = 64
-    epochs = 120
-    out_every = 10
+    epochs = 100
+    out_every = 2
     data_set = TransformerDataset(data_folder, step=step, frame_size=frame_size)
     data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=True)
     # ----------------------------------------------------------------------------
 
-    loses = transformer_train_loop(model, embedder,optimizer, data_loader, epochs, show_every_n=out_every)
+    loses, model = transformer_train_loop(model, embedder, optimizer, data_loader, epochs, show_every_n=out_every)
 
     # ----------------------------------------------------------------------------
 
-    plt.plot(range(50,len(loses)), loses[50:])
+    plt.plot(range(0, len(loses)), loses[0:])
     plt.grid()
     plt.title(f"{transformer_name}_loss")
     plt.savefig(path.join(image_folder, f"{transformer_name}_loss.png"))
