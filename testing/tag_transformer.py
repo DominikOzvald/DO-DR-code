@@ -88,14 +88,11 @@ if __name__ == "__main__":
     matrix = np.round(matrix, 5)
     disp = ConfusionMatrixDisplay(confusion_matrix=matrix,
                                   display_labels=["Standard", 'Nestabilni', "Pomak", "Sigurnost", "Tihi"])
-    fmt = lambda x: "0" if x == 0 else f"{x:.5f}"
-    disp.plot(cmap="Reds", values_format=".6f")
-    # plt.show()
 
+    disp.plot(cmap="Reds", values_format=".6f")
     format_matrix_display(disp)
     plt.xlabel("Predviđene oznake")
     plt.ylabel("Stvarne oznake")
-    plt.savefig(path.join(image_folder, f"{transformer_name}_matrix.png"))
     rep = classification_report(y_true, y_pred, labels=[0, 1, 2, 3, 4],
                                 target_names=["Standard", "Flaky", "Drift", "Security", "Silent"], zero_division=np.nan)
     rep_dict = classification_report(y_true, y_pred, labels=[0, 1, 2, 3, 4],
@@ -105,8 +102,9 @@ if __name__ == "__main__":
     y_true = y_true[y_true != 0]
     anomaly_acc = torch.sum(y_pred == y_true) / len(y_true)
 
-    with open(path.join(image_folder, f"{transformer_name}_report.txt"), "w") as f:
-        f.write(rep)
-        for key in rep_dict:
-            f.write(f"{key} : {rep_dict[key]}\n")
-        f.write(f"Anomaly accuracy : {anomaly_acc.item()}")
+
+    print(rep)
+    for key in rep_dict:
+        print(f"{key} : {rep_dict[key]}")
+    print(f"Anomaly accuracy : {anomaly_acc.item()}")
+    plt.show()

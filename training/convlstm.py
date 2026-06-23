@@ -4,14 +4,12 @@ from torch.optim import Adam
 from models.convlstm import ConvLSTM
 from torch.utils.data import DataLoader
 from utils.train import conv_lstm_train_loop
-import matplotlib.pyplot as plt
 from os import path
 from torch import save
 
 if __name__ == "__main__":
     data_folder = "../train_data"
     save_folder = "../trained_models"
-    image_folder = "../train_images"
 
     char_vocab = CharVocab()
     embed_size = 32
@@ -41,10 +39,5 @@ if __name__ == "__main__":
     optimizer = Adam(model.parameters(), lr=lr)
     losses, model = conv_lstm_train_loop(model, optimizer, data_loader, epochs=epochs, show_every_n=show_every,
                                          milestones=milestones)
-
-    plt.plot(range(5, len(losses)), losses[5:])
-    plt.title(model_name + " loss")
-    plt.grid()
-    plt.savefig(path.join(image_folder, model_name + ".png"))
 
     save(model.state_dict(), path.join(save_folder, model_name + '.pt'))

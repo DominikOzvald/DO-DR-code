@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 if __name__ == "__main__":
     data_folder = "../train_data"
     save_folder = "../trained_models"
-    image_folder = "../train_images"
     # ----------------------------------------------------------------------------
     char_vocab = CharVocab()
     embed_size = 32
@@ -60,12 +59,6 @@ if __name__ == "__main__":
 
     losses, model, _ = tagged_train_loop(model, embedder, optimizer, data_loader, epochs, show_every=out_every)
 
-    # ----------------------------------------------------------------------------
-
-    plt.plot(range(0, len(losses)), losses[0:])
-    plt.grid()
-    plt.title(f"{transformer_name}_loss")
-    plt.savefig(path.join(image_folder, f"{transformer_name}_loss.png"))
     # ----------------------------------------------------------------------------
 
     save(model.state_dict(), path.join(save_folder, transformer_name + ".pt"))

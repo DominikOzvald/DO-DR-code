@@ -7,7 +7,6 @@ from utils.train import transformer_train_loop
 from torch.utils.data import DataLoader
 from torch import save
 from models.embedder import ConvEmbedder
-import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
@@ -66,13 +65,6 @@ if __name__ == "__main__":
     # ----------------------------------------------------------------------------
 
     loses, model = transformer_train_loop(model, embedder, optimizer, data_loader, epochs, show_every_n=out_every)
-
-    # ----------------------------------------------------------------------------
-
-    plt.plot(range(0, len(loses)), loses[0:])
-    plt.grid()
-    plt.title(f"{transformer_name}_loss")
-    plt.savefig(path.join(image_folder, f"{transformer_name}_loss.png"))
     # ----------------------------------------------------------------------------
 
     save(model.state_dict(), path.join(save_folder, transformer_name + ".pt"))
