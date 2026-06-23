@@ -1,0 +1,20 @@
+              precision    recall  f1-score   support
+
+    Standard       0.99      1.00      1.00      7165
+       Flaky       0.97      0.94      0.95       271
+       Drift       1.00      0.94      0.97       220
+    Security       0.98      0.88      0.93       152
+      Silent       0.76      0.92      0.83        38
+
+    accuracy                           0.99      7846
+   macro avg       0.94      0.94      0.94      7846
+weighted avg       0.99      0.99      0.99      7846
+Standard : {'precision': 0.9943000139024051, 'recall': 0.9981856245638521, 'f1-score': 0.9962390305056414, 'support': 7165.0}
+"Flaky" : {'precision': 0.9659090909090909, 'recall': 0.940959409594096, 'f1-score': 0.9532710280373832, 'support': 271.0}
+Pomak : {'precision': 1.0, 'recall': 0.9363636363636364, 'f1-score': 0.9671361502347418, 'support': 220.0}
+Sigurnost : {'precision': 0.9781021897810219, 'recall': 0.881578947368421, 'f1-score': 0.9273356401384083, 'support': 152.0}
+Tihi : {'precision': 0.7608695652173914, 'recall': 0.9210526315789473, 'f1-score': 0.8333333333333334, 'support': 38.0}
+accuracy : 0.9918429773132806
+macro avg : {'precision': 0.9398361719619819, 'recall': 0.9356280498937906, 'f1-score': 0.9354630364499016, 'support': 7846.0}
+weighted avg : {'precision': 0.9920348635702362, 'recall': 0.9918429773132806, 'f1-score': 0.9918150317601836, 'support': 7846.0}
+Anomaly accuracy : 0.9251101613044739
