@@ -2,7 +2,7 @@ import torch.nn
 from os import path
 from utils.datasets import CharVocab, DummyLogDataSet
 from models.embedder import ConvEmbedder
-from models.vaetransformer import VAETransformer
+from models.transformer import PredTransformer
 from torch.utils.data import DataLoader
 from utils.train import transformer_loss
 import torch.nn.functional as F
@@ -42,8 +42,8 @@ if __name__ == "__main__":
     dim_forward = 1024
     transformer_name = f"VAETransformer_DE_{dec_enc_layer}_H_{n_head}_F_{dim_forward}"
     d_model = 64
-    transformer = VAETransformer(d_model=d_model, n_head=n_head, enc_layer=dec_enc_layer,
-                                 dec_layer=dec_enc_layer, dim_forward=dim_forward)
+    transformer = PredTransformer(d_model=d_model, n_head=n_head, enc_layer=dec_enc_layer,
+                                  dec_layer=dec_enc_layer, dim_forward=dim_forward)
 
     try:
         transformer.load_state_dict(torch.load(path.join(save_folder, transformer_name + ".pt"), weights_only=True))

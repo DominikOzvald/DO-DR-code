@@ -17,7 +17,7 @@ class PosEncoder(torch.nn.Module):
         return x + self.pe[:, :x.size(1), :]
 
 
-class VAETransformer(torch.nn.Module):
+class PredTransformer(torch.nn.Module):
     def __init__(self, d_model: int = 512, n_head: int = 8, dec_layer: int = 6,
                  enc_layer: int = 6, dim_forward=1024):
         super().__init__()
@@ -44,39 +44,6 @@ class VAETransformer(torch.nn.Module):
                                src_key_padding_mask=masks)
 
         return out
-
-
-class DecoderTransformer(torch.nn.Module):
-    def __init__(self, d_model: int = 128, dim_forward: int = 1024, n_head: int = 2,
-                 enc_dec_layer: int = 2):
-        super().__init__()
-
-        self.d_model = d_model
-        self.dim_forward = dim_forward
-        self.n_head = n_head
-        self.enc_dec_layer = enc_dec_layer
-
-        self.transformer = torch.nn.Transformer(d_model=d_model, dim_feedforward=dim_forward, nhead=n_head,
-                                                num_decoder_layers=enc_dec_layer, num_encoder_layers=enc_dec_layer,
-                                                batch_first=True)
-        self.pe = PosEncoder(d_model)
-
-    def forward(self, z: torch.Tensor, masks: torch.Tensor, n_steps: int = 4):
-        src = z * math.sqrt(self.d_model)
-        src = self.pe(src)
-        for i in range(n_steps):
-            sos = torch.zeros((src.size(0), 1, src.size(2)), device=src.device)
-            tgt = torch.cat([sos, src[:, :-1, :]], dim=1)
-
-            casual_mask = torch.nn.Transformer.generate_square_subsequent_mask(src.size(1), device=src.device)
-            trnas_out = self.transformer(src=src, tgt=tgt, tgt_mask=casual_mask, tgt_key_padding_mask=None,
-                                         src_key_padding_mask=None)
-
-            new_vector = trnas_out[:, -1:, :]
-            src = torch.cat([src, new_vector], dim=1)
-        out = src[:, -n_steps:, :]
-        return out
-
 
 class TaggedTransformer(torch.nn.Module):
     def __init__(self, d_model: int = 128, dim_forward: int = 1024, n_head: int = 2,

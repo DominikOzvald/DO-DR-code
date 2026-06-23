@@ -1,7 +1,7 @@
 import torch.nn
 from os import path
 from utils.datasets import CharVocab, DummyLogDataSet
-from models.vaetransformer import TaggedTransformer
+from models.transformer import TaggedTransformer
 from torch.optim import Adam
 from utils.train import tagged_train_loop
 from torch.utils.data import DataLoader

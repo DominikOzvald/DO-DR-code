@@ -5,7 +5,7 @@ from utils.train import tagged_train_loop
 import torch
 from os import path
 from torch.optim import Adam
-from models.vaetransformer import TaggedTransformer
+from models.transformer import TaggedTransformer
 from torch import save
 if __name__ == "__main__":
     data_folder = "C:/Faks/Diplomski rad/data/tagged_gha/train"

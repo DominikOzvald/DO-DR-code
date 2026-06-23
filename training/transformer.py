@@ -2,7 +2,7 @@ import torch.nn
 from os import path
 from models.convlstm import ConvLSTM
 from utils.datasets import CharVocab, TransformerDataset
-from models.vaetransformer import VAETransformer
+from models.transformer import PredTransformer
 from torch.optim import Adam
 from utils.train import transformer_train_loop
 from torch.utils.data import DataLoader
@@ -50,8 +50,8 @@ if __name__ == "__main__":
     lr = 2e-3
     # ----------------------------------------------------------------------------
 
-    model = VAETransformer(d_model=d_model, n_head=n_head, dec_layer=dec_layer, enc_layer=enc_layer,
-                           dim_forward=dim_forward)
+    model = PredTransformer(d_model=d_model, n_head=n_head, dec_layer=dec_layer, enc_layer=enc_layer,
+                            dim_forward=dim_forward)
 
     optimizer = Adam(model.parameters(), lr=lr)
     # ----------------------------------------------------------------------------

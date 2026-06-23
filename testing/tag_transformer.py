@@ -2,7 +2,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 
 from models.embedder import ConvEmbedder
-from models.vaetransformer import TaggedTransformer
+from models.transformer import TaggedTransformer
 from utils.datasets import DummyLogDataSet
 from utils.embeddings import CharVocab
 import torch.nn
