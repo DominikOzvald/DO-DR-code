@@ -10,7 +10,7 @@ from src.ML.models.embedder import ConvEmbedder
 
 if __name__ == "__main__":
     file_path = path.dirname(path.abspath(__file__))
-    data_folder = path.join(file_path,"../../../train_data_std")
+    data_folder = path.join(file_path,"../../../data/dummy/train_no_anomaly")
     save_folder = path.join(file_path,"../../../models")
     # ----------------------------------------------------------------------------
     char_vocab = CharVocab()

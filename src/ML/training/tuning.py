@@ -10,7 +10,7 @@ from torch import save
 
 if __name__ == "__main__":
     file_path = path.dirname(path.abspath(__file__))
-    data_folder = path.join(file_path,"C:/Faks/Diplomski rad/data/tagged_gha/train")
+    data_folder = path.join(file_path,"../../../data/gha/train")
     save_folder = path.join(file_path,"../../../models")
 
     # ----------------------------------------------------------------------------
