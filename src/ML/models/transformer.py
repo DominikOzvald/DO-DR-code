@@ -17,7 +17,7 @@ class PosEncoder(torch.nn.Module):
         return x + self.pe[:, :x.size(1), :]
 
 
-class PredTransformer(torch.nn.Module):
+class RecTransformer(torch.nn.Module):
     def __init__(self, d_model: int = 512, n_head: int = 8, dec_layer: int = 6,
                  enc_layer: int = 6, dim_forward=1024):
         super().__init__()

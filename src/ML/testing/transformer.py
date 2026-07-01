@@ -2,7 +2,7 @@ import torch.nn
 from os import path
 from src.ML.utils.datasets import CharVocab, DummyLogDataSet
 from src.ML.models.embedder import ConvEmbedder
-from src.ML.models.transformer import PredTransformer
+from src.ML.models.transformer import RecTransformer
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
@@ -43,8 +43,8 @@ if __name__ == "__main__":
     dim_forward = 1024
     transformer_name = f"PredTransformer_DE_{dec_enc_layer}_H_{n_head}_F_{dim_forward}"
     d_model = 128
-    transformer = PredTransformer(d_model=d_model, n_head=n_head, enc_layer=dec_enc_layer,
-                                  dec_layer=dec_enc_layer, dim_forward=dim_forward)
+    transformer = RecTransformer(d_model=d_model, n_head=n_head, enc_layer=dec_enc_layer,
+                                 dec_layer=dec_enc_layer, dim_forward=dim_forward)
 
     try:
         transformer.load_state_dict(torch.load(path.join(save_folder, transformer_name + ".pt"), weights_only=True,map_location=torch.device('cpu')))

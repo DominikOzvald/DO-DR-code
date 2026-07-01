@@ -1,7 +1,7 @@
 import torch.nn
 from os import path
 from src.ML.utils.datasets import CharVocab, TransformerDataset
-from src.ML.models.transformer import PredTransformer
+from src.ML.models.transformer import RecTransformer
 from torch.optim import Adam
 from src.ML.utils.train import transformer_train_loop
 from torch.utils.data import DataLoader
@@ -48,8 +48,8 @@ if __name__ == "__main__":
     lr = 2e-3
     # ----------------------------------------------------------------------------
 
-    model = PredTransformer(d_model=d_model, n_head=n_head, dec_layer=dec_layer, enc_layer=enc_layer,
-                            dim_forward=dim_forward)
+    model = RecTransformer(d_model=d_model, n_head=n_head, dec_layer=dec_layer, enc_layer=enc_layer,
+                           dim_forward=dim_forward)
 
     optimizer = Adam(model.parameters(), lr=lr)
     # ----------------------------------------------------------------------------
